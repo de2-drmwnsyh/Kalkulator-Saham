@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalkulator Saham</title>
+<meta name="theme-color" content="#0b0b0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kalkulator Saham">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root{--bg:#0b0b0c;--card:#161618;--card2:#202023;--line:#2b2b2f;--tx:#f5f5f7;--mut:#8e8e93;
+--acc:#ff6b2c;--up:#4ade80;--down:#ff5d5d;--r:22px;
+--font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--font);-webkit-text-size-adjust:100%;overflow-x:hidden}
+.app{width:100%;max-width:480px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 22px) 16px calc(env(safe-area-inset-bottom) + 32px)}
+.head{padding:4px 6px 18px}
+.head h1{margin:0;font-size:28px;font-weight:800;letter-spacing:-.02em}
+.head p{margin:6px 0 0;color:var(--mut);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.card h2{margin:0 0 14px;font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--mut);display:flex;align-items:center;gap:10px}
+.ico{width:28px;height:28px;border-radius:50%;background:var(--card2);color:var(--acc);display:grid;place-items:center;font-size:15px;letter-spacing:0}
+.lbl{display:block;font-size:13px;color:var(--mut);margin:12px 0 6px}
+.field{display:flex;align-items:center;background:var(--card2);border:1.5px solid transparent;border-radius:16px;padding:0 14px;min-height:52px;transition:border-color .2s,background .2s}
+.field:focus-within{border-color:var(--acc);background:#252528}
+.field input{flex:1;min-width:0;width:100%;background:none;border:0;outline:0;color:var(--tx);font:600 18px var(--font);padding:14px 0}
+.field input::placeholder{color:#55555a}
+.pre,.suf{color:var(--mut);font-size:15px;font-weight:600}.pre{margin-right:8px}.suf{margin-left:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:11px 0;font-size:14px;color:var(--mut);border-top:1px solid var(--line);margin-top:0}
+.row b{color:var(--tx);font-weight:600;font-size:15px;text-align:right;word-break:break-all}
+.row.hl{margin-top:14px;border-top:1px solid var(--line)}.row.hl span{color:var(--tx);font-weight:600}.row.hl b{font-size:17px}
+.grid2+.row{margin-top:14px}
+.result{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 50% -10%,var(--glow,rgba(255,107,44,.28)),transparent 62%),var(--card)}
+.result[data-state=up]{--glow:rgba(74,222,128,.22)}.result[data-state=down]{--glow:rgba(255,93,93,.25)}.result[data-state=neutral]{--glow:rgba(255,255,255,.06)}
+.status{margin:6px 0 0;text-align:center;font-size:14px;color:var(--mut)}
+.big{text-align:center;font-size:clamp(30px,10vw,44px);font-weight:800;letter-spacing:-.03em;margin:6px 0 10px;word-break:break-all;transition:color .3s}
+.chip{width:max-content;margin:0 auto 6px;padding:6px 14px;border-radius:99px;background:var(--card2);font-weight:700;font-size:15px;transition:color .3s}
+.hint{text-align:center;color:var(--mut);font-size:12.5px;margin:6px 0 10px;min-height:16px}
+.result[data-state=up] .big,.result[data-state=up] .chip{color:var(--up)}
+.result[data-state=down] .big,.result[data-state=down] .chip{color:var(--down)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.btn{min-height:54px;border-radius:18px;border:0;font:700 16px var(--font);cursor:pointer;transition:transform .12s,opacity .2s}
+.btn:active{transform:scale(.97)}
+.primary{background:var(--acc);color:#fff}.ghost{background:var(--card2);color:var(--tx)}.danger{background:var(--down);color:#fff}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding:16px calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 16px);z-index:10;animation:fade .2s}
+.modal[hidden]{display:none}
+.sheet{width:100%;max-width:440px;background:var(--card);border:1px solid var(--line);border-radius:26px;padding:22px;animation:up .25s ease}
+.sheet h3{margin:0 0 6px;font-size:18px}.sheet p{margin:0 0 18px;color:var(--mut);font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translate(-50%,20px);background:var(--card2);border:1px solid var(--line);padding:12px 18px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:90vw}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@keyframes fade{from{opacity:0}}@keyframes up{from{transform:translateY(30px);opacity:0}}
+@media(max-width:340px){.grid2{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<main class="app">
+  <header class="head">
+    <h1>KALKULATOR SAHAM</h1>
+    <p>Hitung modal &amp; keuntungan saham per lot.</p>
+  </header>
+
+  <section class="card" aria-labelledby="t-beli">
+    <h2 id="t-beli"><span class="ico">↓</span>PEMBELIAN</h2>
+    <label class="lbl" for="hargaBeli">Harga Beli Saham (per lembar)</label>
+    <div class="field"><span class="pre">Rp</span><input id="hargaBeli" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+    <label class="lbl" for="lotBeli">Jumlah LOT</label>
+    <div class="field"><input id="lotBeli" type="text" inputmode="numeric" autocomplete="off" placeholder="0"><span class="suf">lot</span></div>
+    <div class="row"><span>Jumlah Lembar (1 lot = 100)</span><b id="oLembarBeli">0</b></div>
+    <div class="row hl"><span>Total Modal</span><b id="oModal">Rp0</b></div>
+  </section>
+
+  <section class="card" aria-labelledby="t-jual">
+    <h2 id="t-jual"><span class="ico">↑</span>PENJUALAN</h2>
+    <label class="lbl" for="hargaJual">Harga Jual Saham (per lembar)</label>
+    <div class="field"><span class="pre">Rp</span><input id="hargaJual" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+    <label class="lbl" for="lotJual">Jumlah LOT Dijual</label>
+    <div class="field"><input id="lotJual" type="text" inputmode="numeric" autocomplete="off" placeholder="0"><span class="suf">lot</span></div>
+    <div class="row"><span>Jumlah Lembar Dijual</span><b id="oLembarJual">0</b></div>
+    <div class="row hl"><span>Total Penjualan</span><b id="oKotor">Rp0</b></div>
+  </section>
+
+  <section class="card result" id="hasil" data-state="neutral" aria-live="polite">
+    <h2><span class="ico">◎</span>HASIL INVESTASI</h2>
+    <p class="status" id="rStatus">Belum dihitung</p>
+    <div class="big" id="rLaba">Rp0</div>
+    <div class="chip" id="rRoi">0%</div>
+    <p class="hint" id="rHint">Isi harga beli, lot beli, harga jual, dan lot dijual.</p>
+    <div class="row"><span>Modal Lot yang Dijual</span><b id="rModal">Rp0</b></div>
+    <div class="row"><span>Total Penerimaan</span><b id="rTerima">Rp0</b></div>
+    <div class="row"><span>Sisa LOT</span><b id="rSisa">0 lot</b></div>
+  </section>
+
+  <div class="actions">
+    <button class="btn ghost" id="btnReset" type="button">Atur Ulang</button>
+    <button class="btn primary" id="btnShare" type="button">Bagikan Hasil</button>
+  </div>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h3 id="mTitle">Atur ulang semua input?</h3>
+    <p>Semua angka akan dikosongkan.</p>
+    <div class="actions">
+      <button class="btn ghost" id="mNo" type="button">Batal</button>
+      <button class="btn danger" id="mYes" type="button">Atur Ulang</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var IDS = ['hargaBeli', 'lotBeli', 'hargaJual', 'lotJual'];
+  var LOT = 100; // 1 lot = 100 lembar
+  var last = null;
+
+  function group(s) { return s.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  function rp(n) {
+    if (!isFinite(n)) n = 0;
+    var r = Math.round(Math.abs(n));
+    return (n < 0 && r !== 0 ? '-' : '') + 'Rp' + group(String(r));
+  }
+  function pct(n) {
+    if (!isFinite(n)) n = 0;
+    return (Math.round(n * 100) / 100).toString().replace('.', ',') + '%';
+  }
+  function val(id) {
+    var n = parseInt($(id).value.replace(/\./g, ''), 10);
+    return isFinite(n) && n > 0 ? n : 0;
+  }
+  function fmtInt(el) {
+    var pos = el.selectionStart || 0;
+    var before = el.value.slice(0, pos).replace(/\D/g, '').length;
+    var d = el.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+    if (d.length > 12) d = d.slice(0, 12);
+    el.value = group(d);
+    var i = 0, c = 0;
+    while (i < el.value.length && c < before) { if (/\d/.test(el.value[i])) c++; i++; }
+    try { el.setSelectionRange(i, i); } catch (e) {}
+  }
+
+  function hitung() {
+    var hb = val('hargaBeli'), lotB = val('lotBeli'), hj = val('hargaJual'), lotJ = val('lotJual');
+    var lembarB = lotB * LOT, lembarJ = lotJ * LOT;
+    var modalTotal = hb * lembarB;
+    var modalJual = hb * lembarJ;          // modal hanya untuk lot yang dijual
+    var kotor = hj * lembarJ;
+    var lebih = lotJ > lotB;
+    var siap = hb > 0 && lotB > 0 && hj > 0 && lotJ > 0 && !lebih;
+    var laba = siap ? kotor - modalJual : 0;
+    var roi = siap && modalJual > 0 ? laba / modalJual * 100 : 0;
+    var state = laba > 0 ? 'up' : laba < 0 ? 'down' : 'neutral';
+
+    $('oLembarBeli').textContent = group(String(lembarB));
+    $('oModal').textContent = rp(modalTotal);
+    $('oLembarJual').textContent = group(String(lembarJ));
+    $('oKotor').textContent = rp(kotor);
+
+    $('rModal').textContent = rp(siap ? modalJual : 0);
+    $('rTerima').textContent = rp(siap ? kotor : 0);
+    $('rSisa').textContent = group(String(Math.max(lotB - lotJ, 0))) + ' lot';
+    $('rLaba').textContent = (laba > 0 ? '+' : '') + rp(laba);
+    $('rRoi').textContent = (roi > 0 ? '+' : '') + pct(roi);
+    $('rStatus').textContent = !siap ? 'Belum dihitung' : state === 'up' ? 'Keuntungan' : state === 'down' ? 'Kerugian' : 'Impas';
+    $('rHint').textContent = lebih ? 'LOT dijual melebihi LOT yang dibeli.' : siap ? '' : 'Isi harga beli, lot beli, harga jual, dan lot dijual.';
+    $('hasil').setAttribute('data-state', siap ? state : 'neutral');
+
+    last = { siap: siap, hb: hb, lotB: lotB, hj: hj, lotJ: lotJ, modalJual: modalJual, kotor: kotor, laba: laba, roi: roi };
+  }
+
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.id); toast.id = setTimeout(function () { t.classList.remove('show'); }, 2200);
+  }
+  function ringkasan() {
+    var d = last;
+    return ['KALKULATOR SAHAM',
+      'Harga beli: ' + rp(d.hb) + ' / lembar',
+      'Lot dibeli: ' + group(String(d.lotB)) + ' lot',
+      'Harga jual: ' + rp(d.hj) + ' / lembar',
+      'Lot dijual: ' + group(String(d.lotJ)) + ' lot',
+      'Modal lot dijual: ' + rp(d.modalJual),
+      'Total penjualan: ' + rp(d.kotor),
+      (d.laba < 0 ? 'Kerugian: ' : 'Keuntungan: ') + rp(d.laba),
+      'ROI: ' + pct(d.roi)].join('\n');
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;top:0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    toast(ok ? 'Ringkasan disalin' : 'Gagal menyalin, coba lagi');
+  }
+  function bagikan() {
+    hitung();
+    if (!last.siap) { toast('Lengkapi semua input dengan benar'); return; }
+    var text = ringkasan();
+    if (navigator.share) {
+      navigator.share({ title: 'Kalkulator Saham', text: text }).catch(function (e) {
+        if (e && e.name !== 'AbortError') fallbackCopy(text);
+      });
+    } else if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () { toast('Ringkasan disalin'); }, function () { fallbackCopy(text); });
+    } else { fallbackCopy(text); }
+  }
+  function reset() {
+    IDS.forEach(function (id) { $(id).value = ''; });
+    $('modal').hidden = true;
+    hitung(); toast('Semua input diatur ulang');
+  }
+
+  IDS.forEach(function (id) {
+    var el = $(id);
+    el.addEventListener('input', function () { fmtInt(el); hitung(); });
+  });
+  $('btnReset').addEventListener('click', function () { $('modal').hidden = false; });
+  $('mNo').addEventListener('click', function () { $('modal').hidden = true; });
+  $('mYes').addEventListener('click', reset);
+  $('modal').addEventListener('click', function (e) { if (e.target === this) this.hidden = true; });
+  $('btnShare').addEventListener('click', bagikan);
+  hitung();
+})();
+</script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>
